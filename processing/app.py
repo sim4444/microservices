@@ -43,7 +43,7 @@ DEFAULT_STATS = {
 def populate_stats():
     """Periodically fetches data from the storage service and updates statistics."""
     logger.info("Starting periodic statistics processing.")
-
+    logger.info("in progress")
     # Ensure file exists
     if not os.path.exists(STATS_FILE):
         logger.warning("%s does not exist. Creating new file with default stats.", STATS_FILE)
