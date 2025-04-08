@@ -13,6 +13,8 @@ from connexion import NoContent
 
 logging.Formatter.converter = time.gmtime
 
+#test 
+
 # Load logging configuration
 with open("./config/log_conf.yml", "r", encoding="utf-8") as f:
     LOG_CONFIG = yaml.safe_load(f.read())

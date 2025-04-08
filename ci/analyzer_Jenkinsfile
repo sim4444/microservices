@@ -1,6 +1,6 @@
 @Library('jenkins_shared_library') _
 
-cicdPipeline(
+cicdpipeline(
     serviceDir: 'analyzer',
     imageName: 'sim44/analyzer',
     tag: 'latest',
