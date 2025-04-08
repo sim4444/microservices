@@ -1,26 +1,27 @@
-import connexion
-import httpx
-import yaml
+"""Receiver microservice that accepts events and pushes them to Kafka."""
+
 import uuid
 import datetime
 import logging.config
-from connexion import NoContent
 import time
-from pykafka import KafkaClient
 import json
+
+import connexion
+import yaml
+from pykafka import KafkaClient
+from connexion import NoContent
 
 logging.Formatter.converter = time.gmtime
 
 # Load logging configuration
-with open("./config/log_conf.yml", "r") as f:
+with open("./config/log_conf.yml", "r", encoding="utf-8") as f:
     LOG_CONFIG = yaml.safe_load(f.read())
     logging.config.dictConfig(LOG_CONFIG)
 
-
-logger = logging.getLogger("basicLogger")  # Get the logger
+logger = logging.getLogger("basicLogger")
 
 # Load configuration from YAML file
-with open("./config/app_conf.yml", "r") as f:
+with open("./config/app_conf.yml", "r", encoding="utf-8") as f:
     app_config = yaml.safe_load(f.read())
 
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
@@ -31,7 +32,6 @@ client = KafkaClient(hosts=KAFKA_HOST)
 topic = client.topics[str.encode(TOPIC_NAME)]
 producer = topic.get_sync_producer()
 
-# Extract event store URLs based on new structure
 ORDERS_URL = app_config["events"]["orders"]["url"]
 RATING_URL = app_config["events"]["rating"]["url"]
 
@@ -44,6 +44,7 @@ def add_trace_id(body):
         body["trace_id"] = str(uuid.uuid4())
     return body
 
+
 def send_to_kafka(event_type, body):
     """Sends event to Kafka topic instead of HTTP."""
     body = add_trace_id(body)
@@ -54,19 +55,21 @@ def send_to_kafka(event_type, body):
     }
 
     msg_str = json.dumps(message)
-    producer = topic.get_sync_producer()
     producer.produce(msg_str.encode('utf-8'))
 
-    logger.info(f"Produced {event_type} to Kafka with trace_id: {body['trace_id']}")
+    logger.info("Produced %s to Kafka with trace_id: %s", event_type, body["trace_id"])
     return NoContent, 201
+
 
 def report_product_order_event(body):
     """Sends order event to Kafka topic."""
     return send_to_kafka("order_event", body)
 
+
 def report_product_rating_event(body):
     """Sends rating event to Kafka topic."""
     return send_to_kafka("rating_event", body)
+
 
 app = connexion.FlaskApp(__name__, specification_dir='')
 app.add_api("sephora.yaml", base_path="/receiver", strict_validation=True)
