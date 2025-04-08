@@ -1,0 +1,8 @@
+@Library('jenkins-shared-library') _
+
+cicdPipeline(
+    serviceDir: 'processing',
+    imageName: 'sim44/processing',
+    tag: 'latest',
+    serviceName: 'processing'
+)

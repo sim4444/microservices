@@ -1,0 +1,8 @@
+@Library('jenkins-shared-library') _
+
+cicdPipeline(
+    serviceDir: 'storage',
+    imageName: 'sim44/storage',
+    tag: 'latest',
+    serviceName: 'storage'
+)
