@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: Processing Service API
+  version: "1.0.0"
+  description: API to provide event statistics.
+  contact:
+    email: skaur617@bcit.ca
+
+paths:
+  /stats:
+    get:
+      summary: Get event statistics
+      operationId: app.get_stats
+      description: Retrieves statistics for order and rating events.
+      responses:
+        '200':
+          description: Successfully retrieved event statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStats'
+        '404':
+          description: Statistics not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Statistics do not exist"
+
+components:
+  schemas:
+    EventStats:
+      type: object
+      required:
+        - num_order_events
+        - max_price
+        - num_rating_events
+        - max_rating
+        - last_updated
+      properties:
+        num_order_events:
+          type: integer
+          example: 1200
+        max_price:
+          type: number
+          example: 200
+        num_rating_events:
+          type: integer
+          example: 1100
+        max_rating:
+          type: number
+          example: 160
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-01-09T15:30:00Z"

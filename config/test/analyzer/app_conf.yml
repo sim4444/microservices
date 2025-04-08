@@ -1,0 +1,9 @@
+version: 1
+events:
+  hostname: localhost
+  port: 9092
+  topic: test_events
+  orders:
+    url: http://localhost:8090/events/orders
+  rating:
+    url: http://localhost:8090/events/rating

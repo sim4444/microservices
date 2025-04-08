@@ -1,0 +1,97 @@
+openapi: 3.0.0
+info:
+  title: Sephora Event Reporting API
+  description: API for handling product orders and ratings on the Sephora platform. The software processes event data to improve user experience and gather insights into purchasing behavior and product performance.
+  contact:
+    email: samcanadian44@gmail.com
+  version: 1.0.0
+paths:
+  /events/order:
+    post:
+      summary: Reports product order events
+      description: Captures when a user orders a product on the Sephora platform. This event includes user details, product price, and order timestamp.
+      operationId: app.report_product_order_event
+      requestBody:
+        description: Product order event to capture
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductOrderEvent'
+      responses:
+        "201":
+          description: Order Event successfully created
+        "400":
+          description: Invalid input
+
+  /events/rating:
+    post:
+      summary: Reports product rating events
+      description: Tracks when a user submits a rating for a product they have used on the Sephora platform.
+      operationId: app.report_product_rating_event
+      requestBody:
+        description: Product rating event to capture
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRatingEvent'
+      responses:
+        "201":
+          description: Rating Event successfully created
+        "400":
+          description: Invalid input, object 
+          
+components:
+  schemas:
+    ProductOrderEvent:
+      required:
+        - user_id
+        - user_country
+        - price
+        - order_timestamp
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user who placed the order
+          example: user12345
+        user_country:
+          type: string
+          description: The country of the user making the order
+          example: USA
+        price:
+          type: number
+          format: float
+          description: The price of the ordered product
+          example: 39.99
+        order_timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the order was placed
+          example: "2025-01-09T15:00:00Z"
+    
+    ProductRatingEvent:
+      required:
+        - device_id
+        - rating
+        - product_type
+        - timestamp
+      type: object
+      properties:
+        device_id:
+          type: string
+          description: The ID of the device used to rate the product
+          example: device9876
+        rating:
+          type: number
+          format: float
+          description: Rating given by the user to the product
+          example: 4.5
+        product_type:
+          type: string
+          description: Type of the product being rated
+          example: makeup
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the rating was submitted
+          example: "2025-01-12T18:00:00Z"

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="ACIT3855 statistics application" />
+    <script src="updateStats.js"></script>
+    <title>ACIT3855 - Order & Rating Dashboard</title>
+</head>
+
+<body>
+    <main id="main">
+        <div id="header">
+            <h1>Order & Rating Dashboard</h1>
+            <img src="logo3.png" alt="Project Logo" width="150" />
+        </div>
+        <h5 id="last-updated">Last update: <span id="last-updated-value">N/A</span></h5>
+        <div id="messages"></div>
+        <h2>Statistics</h2>
+        <div id="statistics">
+            <div id="processing">
+                <code id="processing-stats">Placeholder value - processing stats should appear here</code>
+            </div>
+            <div id="analyzer">
+                <code id="analyzer-stats">Placeholder value - analyzer stats should appear here</code>
+            </div>
+        </div>
+        <h2>Analyzer events</h2>
+        <div id="analyzer">
+            <div>
+                <h3>Order event</h3>
+                <code id="event-order">
+                </code>
+            </div>
+            <div>
+                <h3>Rating event</h3>
+                <code id="event-rating">
+                </code>
+            </div>
+        </div>
+
+        <h2>Data Consistency Check</h2>
+        <button onclick="runConsistencyCheck()">Run Consistency Check</button>
+        <pre id="consistency-results">No results yet</pre>
+    </main>
+</body>
+
+</html>

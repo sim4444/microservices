@@ -1,0 +1,23 @@
+# Ignore log files
+logs/
+*.log
+
+# Ignore all data files and subdirectories
+data/
+data/**
+
+# Ignore database and Kafka-related files
+data/database/
+data/kafka/
+
+# Ignore production configuration files
+config/prod/
+
+# Ignore Ansible inventory and playbook
+ansible/*
+
+# Ignore compiled binaries, dependencies, and temp files
+venv/
+__pycache__/
+*.pyc
+

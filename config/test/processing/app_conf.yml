@@ -1,0 +1,7 @@
+version: 1
+storage:
+  url: http://localhost:8090
+scheduler:
+  interval: 5
+stats:
+  filename: ./data/test_stats.json

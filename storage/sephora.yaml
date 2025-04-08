@@ -1,0 +1,172 @@
+openapi: 3.0.0
+info:
+  title: Sephora Event Reporting API
+  description: API for handling product orders and ratings on the Sephora platform. The software processes event data to improve user experience and gather insights into purchasing behavior and product performance.
+  contact:
+    email: samcanadian44@gmail.com
+  version: 1.0.0
+paths:
+  /events/order:
+    get:
+      tags:
+        - Order Event
+      summary: get order events 
+      operationId: app.get_order_events
+      description: Retrieve order events within a specified date-time range
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Start date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-07-01T00:00:00Z"
+        - name: end_timestamp 
+          in: query
+          description: End date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-07-06T23:59:59Z"
+      responses:
+        "200":
+          description: Successfully retrieved order events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductOrderEvent'
+        "400":
+          description: Invalid input
+  
+
+  /events/rating:
+    get:
+      tags:
+        - Rating Event
+      summary: Get rating events between timestamps
+      operationId: app.get_rating_events
+      description: Retrieve rating events within a specified date-time range.
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Start date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-07-01T00:00:00Z"
+        - name: end_timestamp
+          in: query
+          description: Start date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-07-06T23:59:59Z"
+      responses:
+        "200":
+          description: Successfully retrieved rating events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductRatingEvent'
+        "400":
+          description: Invalid input
+
+  /counts:
+      get:
+        summary: Get count of events in database
+        operationId: app.get_event_counts
+        responses:
+          '200':
+            description: Event counts
+          '500':
+            description: Internal server error
+
+  /ids/events/order:
+      get:
+        summary: Get IDs for order events
+        operationId: app.get_order_ids
+        responses:
+          '200':
+            description: List of order event IDs
+
+  /ids/events/rating:
+      get:
+        summary: Get IDs for rating events
+        operationId: app.get_rating_ids
+        responses:
+          '200':
+            description: List of rating event IDs
+
+components:
+  schemas:
+    ProductOrderEvent:
+      required:
+        - user_id
+        - user_country
+        - price
+        - order_timestamp
+        - trace_id
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user who placed the order
+          example: user12345
+        user_country:
+          type: string
+          description: The country of the user making the order
+          example: USA
+        price:
+          type: number
+          format: float
+          description: The price of the ordered product
+          example: 39.99
+        order_timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the order was placed
+          example: "2025-01-09T15:00:00Z"
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for event tracking
+    
+    ProductRatingEvent:
+      required:
+        - device_id
+        - rating
+        - product_type
+        - timestamp
+        - trace_id
+      type: object
+      properties:
+        device_id:
+          type: string
+          description: The ID of the device used to rate the product
+          example: device9876
+        rating:
+          type: number
+          format: float
+          description: Rating given by the user to the product
+          example: 4.5
+        product_type:
+          type: string
+          description: Type of the product being rated
+          example: makeup
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the rating was submitted
+          example: "2025-01-12T18:00:00Z"
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for event tracking

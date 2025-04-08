@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: Sephora Event Reporting API
+  description: API for handling product orders and ratings on the Sephora platform. The software processes event data to improve user experience and gather insights into purchasing behavior and product performance.
+  contact:
+    email: samcanadian44@gmail.com
+  version: 1.0.0
+paths:
+  /events/order:
+    get:
+      summary: get order events from history
+      operationId: app.get_order_events
+      description: Retrieve order events from event store
+      parameters:
+        - name: index
+          in: query
+          description: Gets the order event at the index in the event store 
+          schema:
+            type: integer
+            example: 100
+      responses:
+        "200":
+          description: Successfully retrieved order event
+          # content:
+          #   application/json:
+          #     schema:
+          #       $ref: '#/components/schemas/ProductOrderEvent'
+        "400":
+          description: Invalid request
+          content:
+            application/json: 
+              schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+        "404":
+            description: Not Found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string     
+
+
+  /events/rating:
+    get:
+      summary: Get rating events from history
+      operationId: app.get_rating_events
+      description: Retrieve rating events from event store
+      parameters:
+        - name: index
+          in: query
+          description: Gets the rating event at the index in the event store 
+          schema:
+            type: integer
+            example: 100
+      responses:
+        "200":
+          description: Successfully retrieved rating event
+          # content:
+          #   application/json:
+          #     schema:
+          #       $ref: '#/components/schemas/ProductRatingEvent'
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+        "404":
+            description: Not Found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string 
+
+  /stats:
+    get:
+      summary: gets the event stats
+      operationId: app.get_event_stats
+      description: Gets the stats of the history events
+      responses:
+        '200':
+          description: Successfully returned an order event
+  
+
+  /ids/events/order:
+    get:
+      summary: Get all order event IDs and trace IDs
+      operationId: app.get_all_order_ids
+      description: Return all order event_id and trace_id values from Kafka
+      responses:
+        '200':
+          description: Successfully returned order event IDs
+
+  /ids/events/rating:
+    get:
+      summary: Get all rating event IDs and trace IDs
+      operationId: app.get_all_rating_ids
+      description: Return all rating flow event_id and trace_id values from Kafka
+      responses:
+        '200':
+          description: Successfully returned rating event IDs
+
