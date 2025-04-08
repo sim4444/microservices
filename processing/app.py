@@ -3,12 +3,13 @@
 import os
 import time
 import json
-import yaml
-import requests
 import logging.config
 from datetime import datetime
-from apscheduler.schedulers.background import BackgroundScheduler
+
+import yaml
+import requests
 import connexion
+from apscheduler.schedulers.background import BackgroundScheduler
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
@@ -16,15 +17,15 @@ from starlette.middleware.cors import CORSMiddleware
 logging.Formatter.converter = time.gmtime
 
 # Load logging configuration
-with open('./config/log_conf.yml', 'r', encoding='utf-8') as f:
-    LOG_CONFIG = yaml.safe_load(f.read())
+with open('./config/log_conf.yml', 'r', encoding='utf-8') as config_file:
+    LOG_CONFIG = yaml.safe_load(config_file.read())
     logging.config.dictConfig(LOG_CONFIG)
 
 logger = logging.getLogger("basicLogger")
 
 # Load app configuration
-with open('./config/app_conf.yml', 'r', encoding='utf-8') as f:
-    app_config = yaml.safe_load(f.read())
+with open('./config/app_conf.yml', 'r', encoding='utf-8') as config_file:
+    app_config = yaml.safe_load(config_file.read())
 
 STORAGE_SERVICE_URL = app_config['storage']['url']
 STATS_FILE = app_config['stats']['filename']
@@ -44,13 +45,13 @@ def populate_stats():
     logger.info("Starting periodic statistics processing.")
 
     if not os.path.exists(STATS_FILE):
-        logger.warning(f"{STATS_FILE} does not exist. Creating with default stats.")
-        with open(STATS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(DEFAULT_STATS, f, indent=4)
-        logger.info(f"Created {STATS_FILE} with default statistics.")
+        logger.warning("%s does not exist. Creating with default stats.", STATS_FILE)
+        with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
+            json.dump(DEFAULT_STATS, stats_file, indent=4)
+        logger.info("Created %s with default statistics.", STATS_FILE)
 
-    with open(STATS_FILE, 'r', encoding='utf-8') as f:
-        stats = json.load(f)
+    with open(STATS_FILE, 'r', encoding='utf-8') as stats_file:
+        stats = json.load(stats_file)
 
     last_updated = stats.get("last_updated", "1970-01-01T00:00:00Z")
     current_time = datetime.utcnow().isoformat() + "Z"
@@ -69,8 +70,8 @@ def populate_stats():
             order_events = order_response.json()
             rating_events = rating_response.json()
 
-            logger.info(f"Received {len(order_events)} order events.")
-            logger.info(f"Received {len(rating_events)} rating events.")
+            logger.info("Received %d order events.", len(order_events))
+            logger.info("Received %d rating events.", len(rating_events))
 
             stats["num_order_events"] += len(order_events)
             stats["num_rating_events"] += len(rating_events)
@@ -89,14 +90,14 @@ def populate_stats():
 
             stats["last_updated"] = current_time
 
-            with open(STATS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(stats, f, indent=4)
+            with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
+                json.dump(stats, stats_file, indent=4)
 
-            logger.debug(f"Updated statistics: {json.dumps(stats, indent=4)}")
+            logger.debug("Updated statistics: %s", json.dumps(stats, indent=4))
         else:
             logger.error("Failed to fetch data from storage service.")
-    except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
+    except Exception as err:
+        logger.error("An error occurred: %s", str(err))
 
     logger.info("Periodic statistics processing completed.")
 
@@ -116,28 +117,9 @@ def get_stats():
         logger.error("Statistics file does not exist.")
         return {"message": "Statistics do not exist"}, 404
 
-    with open(STATS_FILE, 'r', encoding='utf-8') as f:
-        stats = json.load(f)
+    with open(STATS_FILE, 'r', encoding='utf-8') as stats_file:
+        stats = json.load(stats_file)
 
-    logger.debug(f"Returning statistics: {json.dumps(stats, indent=4)}")
+    logger.debug("Returning statistics: %s", json.dumps(stats, indent=4))
     logger.info("GET /stats request processed successfully.")
-    return stats, 200
-
-
-# Connexion app and middleware setup
-app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("processing.yaml", base_path="/processing", strict_validation=True, validate_responses=True)
-
-if os.environ.get("CORS_ALLOW_ALL") == "yes":
-    app.add_middleware(
-        CORSMiddleware,
-        position=MiddlewarePosition.BEFORE_EXCEPTION,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-if __name__ == "__main__":
-    init_scheduler()
-    app.run(port=8100, host="0.0.0.0")
+    return stats,
