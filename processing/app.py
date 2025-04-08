@@ -1,36 +1,36 @@
-"""Processing microservice that aggregates and updates statistics periodically."""
-
 import os
 import time
 import json
 import logging.config
 from datetime import datetime
-
 import yaml
 import requests
-import connexion
 from apscheduler.schedulers.background import BackgroundScheduler
+import connexion
+
+# Optional CORS setup
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-# Set logging to use UTC time
+
+# Ensure timestamps use UTC
 logging.Formatter.converter = time.gmtime
 
 # Load logging configuration
-with open('./config/log_conf.yml', 'r', encoding='utf-8') as config_file:
-    LOG_CONFIG = yaml.safe_load(config_file.read())
+with open('./config/log_conf.yml', 'r', encoding='utf-8') as log_file:
+    LOG_CONFIG = yaml.safe_load(log_file.read())
     logging.config.dictConfig(LOG_CONFIG)
 
 logger = logging.getLogger("basicLogger")
 
 # Load app configuration
-with open('./config/app_conf.yml', 'r', encoding='utf-8') as config_file:
-    app_config = yaml.safe_load(config_file.read())
+with open('./config/app_conf.yml', 'r', encoding='utf-8') as conf_file:
+    app_config = yaml.safe_load(conf_file.read())
 
 STORAGE_SERVICE_URL = app_config['storage']['url']
 STATS_FILE = app_config['stats']['filename']
 
-# Default stats structure
+# Default stats
 DEFAULT_STATS = {
     "num_order_events": 0,
     "max_price": 0,
@@ -44,8 +44,9 @@ def populate_stats():
     """Periodically fetches data from the storage service and updates statistics."""
     logger.info("Starting periodic statistics processing.")
 
+    # Ensure file exists
     if not os.path.exists(STATS_FILE):
-        logger.warning("%s does not exist. Creating with default stats.", STATS_FILE)
+        logger.warning("%s does not exist. Creating new file with default stats.", STATS_FILE)
         with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
             json.dump(DEFAULT_STATS, stats_file, indent=4)
         logger.info("Created %s with default statistics.", STATS_FILE)
@@ -61,6 +62,7 @@ def populate_stats():
             f"{STORAGE_SERVICE_URL}/events/order",
             params={"start_timestamp": last_updated, "end_timestamp": current_time}
         )
+
         rating_response = requests.get(
             f"{STORAGE_SERVICE_URL}/events/rating",
             params={"start_timestamp": last_updated, "end_timestamp": current_time}
@@ -95,9 +97,10 @@ def populate_stats():
 
             logger.debug("Updated statistics: %s", json.dumps(stats, indent=4))
         else:
-            logger.error("Failed to fetch data from storage service.")
-    except Exception as err:
-        logger.error("An error occurred: %s", str(err))
+            logger.error("Error fetching data from the storage service.")
+
+    except Exception as error:
+        logger.error("An error occurred: %s", str(error))
 
     logger.info("Periodic statistics processing completed.")
 
@@ -122,4 +125,24 @@ def get_stats():
 
     logger.debug("Returning statistics: %s", json.dumps(stats, indent=4))
     logger.info("GET /stats request processed successfully.")
-    return stats,
+    return stats, 200
+
+
+# Set up the app
+app = connexion.FlaskApp(__name__, specification_dir='')
+app.add_api("processing.yaml", base_path="/processing", strict_validation=True, validate_responses=True)
+
+# CORS support
+if os.environ.get("CORS_ALLOW_ALL") == "yes":
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+if __name__ == "__main__":
+    init_scheduler()
+    app.run(port=8100, host="0.0.0.0")
