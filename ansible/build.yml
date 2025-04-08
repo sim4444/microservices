@@ -1,0 +1,10 @@
+- name: Compose Down and up the containers
+  hosts: azure_vm
+  become: true
+  tasks:
+    - name: Stop and remove existing containers and start
+      shell: |
+        cd /home/azureuser/acit3855_lab9
+        docker compose down
+        docker compose up -d --build
+      ignore_errors: yes

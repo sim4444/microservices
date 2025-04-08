@@ -1,0 +1,106 @@
+- name: Deploy Services on Cloud VM (Azure VM)
+  hosts: azure_vm
+  become: yes
+  tasks:
+    - name: Install required dependencies (Docker, Git)
+      shell: |
+        sudo apt-get update && sudo apt-get upgrade -y
+        sudo apt-get install -y git ss 
+        sudo apt-get install -y ca-certificates curl gnupg
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+    - name: Add user to Docker group
+      shell: "usermod -aG docker azureuser"
+
+    - name: Restart Docker
+      service:
+        name: docker
+        state: restarted
+
+    - name: Ensure SSH private key has correct permissions
+      file:
+        path: /home/azureuser/.ssh/githubkeynew
+        mode: '0600'
+        owner: azureuser
+        group: azureuser
+        
+    - name: Clone Git Repository using SSH
+      git:
+        repo: git@github.com:sim4444/microservices.git
+        dest: /home/azureuser/microservices_assignment
+        version: main
+        accept_hostkey: yes
+        key_file: /home/azureuser/.ssh/githubkeynew
+        force: yes
+        update: yes
+      become: yes
+
+
+    - name: Copy production configuration files  
+      copy:
+        src: ../config/prod/
+        dest: /home/azureuser/microservices_assignment/config/prod/
+        owner: azureuser
+        group: azureuser
+        mode: '0644'
+
+    - name: start services
+      shell: |
+        cd /home/azureuser/microservices_assignment
+        docker compose down
+        docker compose up -d --build
+
+    - name: Ensure top-level logs directory exists
+      file:
+        path: "/home/azureuser/microservices_assignment/logs"
+        state: directory
+        owner: nobody
+        group: nogroup
+
+    - name: Ensure service-specific log directories exist and have correct permissions
+      file:
+        path: "/home/azureuser/microservices_assignment/logs/{{ item }}"
+        state: directory
+        owner: nobody
+        group: nogroup
+      loop:
+        - receiver
+        - storage
+        - processing
+        - analyzer
+        - consistency_check
+
+    - name: Ensure app.log files exist with proper ownership
+      file:
+        path: "/home/azureuser/microservices_assignment/logs/{{ item }}/app.log"
+        state: touch
+        owner: nobody
+        group: nogroup
+      loop:
+        - receiver
+        - storage
+        - processing
+        - analyzer
+        - consistency_check
+
+    - name: Ensure processing data directory exists and set permissions
+      file:
+        path: "/home/azureuser/microservices_assignment/data/processing"
+        state: directory
+        owner: nobody
+        group: nogroup
+
+    - name: Ensure consis data directory exists and set permissions
+      file:
+        path: "/home/azureuser/microservices_assignment/data/consistency_check"
+        state: directory
+        owner: nobody
+        group: nogroup
+
+    
+    
